@@ -1,19 +1,23 @@
 # Residual-Ratio-Thresholding
 
-Residual Ratio Thresholding  (RRT) is a technique to identify the the correct regression model from a sequence of  nested models.  This has found applications in sparse linear regression aka compressed sensing and robust regression with sparse outliers.  
+Residual Ratio Thresholding  (RRT) is a technique to identify the the correct regression model from a sequence of  nested models.  
 
-1). RRT allows the operation of algorithms like LASSO, OMP and their derivatives without knowing signal sparsity and noise variance. 
+1). RRT can operate algorithms like LASSO, OMP and their derivatives without knowing signal sparsity and noise variance. 
 
-2). RRT also provides easy to interpret final sample support recovery guarantees. 
+2). RRT  provides easy to interpret final sample support recovery guarantees. 
 
-3). RRT is closely related to various information theoretic criteria. However, unlike many of these information theoretic criteria, RRT is based on finite sample distributional results. 
+3). RRT is closely related to various information theoretic criteria. However, unlike many of popular information theoretic criteria, RRT is based on finite sample distributional results. 
 
-4). The same fundamental principle is applicable to many different scenarios like group sparsity, row sparsity, robust regression with sparse outliers, linear model order selection etc. 
+4). RRT is applicable to many different scenarios like group sparsity, row sparsity, robust regression with sparse outliers, linear model order selection etc. 
 
-This codes are a result of a joint work with Dr.Sheetal Kalyani, Dept. Of Electrical Engineering. (http://www.ee.iitm.ac.in/user/skalyani/)
+This codes are a result of joint work with Dr.Sheetal Kalyani, Dept. Of Electrical Engineering. (http://www.ee.iitm.ac.in/user/skalyani/)
+
+# Usage 
+Please see the associated notebooks for a tutorial like description on using RRT. 
+
+# Publications
 
 The following papers are published based on the concept of Residual Ratio Thresholding. 
-
 
 1. Signal and Noise Statistics Oblivious Orthogonal Matching Pursuit (ICML 2018, http://proceedings.mlr.press/v80/kallummil18a.html) (Operating OMP using RRT)
 
@@ -25,5 +29,5 @@ The following papers are published based on the concept of Residual Ratio Thresh
 
 5). High SNR consistent compressive sensing without noise statistics. (Elsevier Signal Processing 2020 https://www.sciencedirect.com/science/article/abs/pii/S0165168419303883). Developed a high SNR consistent version of RRT. 
 
-Please cite the relevant papers while using this work. This set of Python RRT codes is a work under progress. Will be fully ready by November 2020. 
+Please cite the relevant papers if you are using these codes. This set of Python RRT codes is a work under progress. Will be fully ready by November 2020. For comments/suggestions, please write to sreejith.k.venugopal@gmail.com
 
