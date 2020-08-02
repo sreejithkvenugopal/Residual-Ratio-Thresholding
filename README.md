@@ -15,13 +15,19 @@ This codes are a result of joint work with Dr.Sheetal Kalyani, Dept. Of Electric
 # Usage 
 Please see the associated notebooks for a tutorial like description on using RRT. 
 
+# Publications
+
 The following papers are published based on the concept of Residual Ratio Thresholding. 
 
 1. Signal and Noise Statistics Oblivious Orthogonal Matching Pursuit (ICML 2018, http://proceedings.mlr.press/v80/kallummil18a.html) (Operating OMP using RRT)
+
 2. Noise Statistics Oblivious GARD For Robust Regression With Sparse Outliers (IEEE TSP 2018, https://ieeexplore.ieee.org/abstract/document/8543649) (Operating an algorithm form robust regression called GARD using RRT)
+
 3). Residual Ratio Thresholding for Linear Model Order Selection (IEEE TSP  2019, https://ieeexplore.ieee.org/abstract/document/8573899) (Perform model order selection using RRT. Establish links between RRT and Information Theoretic criteria)
+
 4). Generalized residual ratio thresholding (Under review in IEEE TSP 2020, https://arxiv.org/pdf/1912.08637.pdf) (Extended RRT to multiple measurement vectors, group sparsity, LASSO etc.)
+
 5). High SNR consistent compressive sensing without noise statistics. (Elsevier Signal Processing 2020 https://www.sciencedirect.com/science/article/abs/pii/S0165168419303883). Developed a high SNR consistent version of RRT. 
 
-Please cite the relevant papers while using this work. This set of Python RRT codes is a work under progress. Will be fully ready by November 2020. 
+Please cite the relevant papers if you are using these codes. This set of Python RRT codes is a work under progress. Will be fully ready by November 2020. For comments/suggestions, please write to sreejith.k.venugopal@gmail.com
 
