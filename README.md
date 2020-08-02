@@ -10,10 +10,12 @@ Residual Ratio Thresholding  (RRT) is a technique to identify the the correct re
 
 4). RRT is applicable to many different scenarios like group sparsity, row sparsity, robust regression with sparse outliers, linear model order selection etc. 
 
-This codes are a result of joint work with Dr.Sheetal Kalyani, Dept. Of Electrical Engineering. (http://www.ee.iitm.ac.in/user/skalyani/)
+These codes are a result of joint work with Dr.Sheetal Kalyani, Dept. Of Electrical Engineering. (http://www.ee.iitm.ac.in/user/skalyani/)
 
 # Usage 
 Please see the associated notebooks for a tutorial like description on using RRT. 
+
+1). RRT_single_measurment_vector.ipynb # for unstructured compressive sensing with single measurement vector
 
 # Publications
 
