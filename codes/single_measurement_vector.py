@@ -64,7 +64,28 @@ class single_measurement_vector():
                 ordered_support_estimate_sequence.append(ordered_support_estimate_sequence[-1])
         return res_ratio,ordered_support_estimate_sequence
     
-    def generate_ordered_sequence(self,support_estimate_sequence):
+    def OMP_prior_sparsity(self,X,Y,sparsity):
+        res=Y # initialize the residual with observation
+        support_estimate=[]
+        flag=0;
+        for k in range(sparsity):
+            correlation=np.abs(np.matmul(X.T,res))
+            ind=np.argmax(correlation)
+            support_estimate.append(ind)
+            Xk=X[:,support_estimate].reshape((self.nsamples,k+1))
+            if lin.matrix_rank(Xk)<len(support_estimate) or lin.cond(Xk)>1e2 or np.max(correlation)<1e-8:
+                print('Ill conditioned matrix. OMP stop at iteration:'+str(k))
+                flag=1;break;
+            else: 
+                Xk_pinv=lin.pinv(Xk)
+                Beta_est=np.zeros((self.nfeatures,1))
+                Beta_est[support_estimate]=np.matmul(Xk_pinv,Y)
+                res=Y-np.matmul(X,Beta_est)
+        return support_estimate,Beta_est
+    
+    def generate_ordered_sequence(self,support_estimate_sequence,kmax=None):
+        if kmax is None:
+            kmax=self.kmax;
         nsupports=len(support_estimate_sequence)
         ordered_support_estimate_sequence=[]
         for k in np.arange(nsupports):
@@ -73,10 +94,14 @@ class single_measurement_vector():
             else:
                 diff=[ele for ele in support_estimate_sequence[k]  if ele not in ordered_support_estimate_sequence]
                 ordered_support_estimate_sequence=ordered_support_estimate_sequence+diff
-        return ordered_support_estimate_sequence[:self.kmax]
+        return ordered_support_estimate_sequence[:kmax]
     
-    def res_ratios_from_ordered_sequence(self,ordered_support_estimate_sequence):
-        X=self.X;Y=self.Y;kmax=self.kmax;
+    def res_ratios_from_ordered_sequence(self,ordered_support_estimate_sequence,X=None,Y=None):
+        if X is None:
+            X=self.X;
+        if Y is None:
+            Y=self.Y;
+        kmax=len(ordered_support_estimate_sequence);
         res_ratio=[]
         res_norm=[]
         res_norm.append(lin.norm(Y))
