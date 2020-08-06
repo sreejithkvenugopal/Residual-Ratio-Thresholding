@@ -5,28 +5,49 @@ import scipy as sci
 import matplotlib.pyplot as plt
 from scipy import special
 from scipy.linalg import hadamard
-import os
+import os,sys
 os.getcwd()
 from sklearn import linear_model
 import warnings
 warnings.filterwarnings('ignore')
-
+sys.path.insert(0, os.path.realpath('.'))
+from codes.residual_ratio_thresholding import residual_ratio_thresholding
 
 class single_measurement_vector():
     def __init__(self):
-        self.nothing=None
+        pass
         
-    def generate_residual_ratios(self,X,Y,algorithm):
+    def compute_signal_and_support(self,X,Y,algorithm='OMP',alpha_list=[0.1]):
         self.Y=Y;self.X=X; nsamples,nfeatures=X.shape; 
         self.kmax=np.min([nfeatures,np.int(np.floor(0.5*(nsamples+1)))]);
-        self.nsamples=nsamples;self.nfeatures=nfeatures; 
+        self.nsamples=nsamples;self.nfeatures=nfeatures;self.alpha_list=alpha_list
+        res_ratio,ordered_support_estimate_sequence=self.generate_residual_ratios(X,Y,algorithm)
+        rrt=residual_ratio_thresholding(self.nsamples,self.nfeatures,alpha_list=self.alpha_list,
+                                nchannels=1,group_size=1,scenario='compressed_sensing:SMV')
+        results=rrt.estimate_support(ordered_support_estimate_sequence,res_ratio)
+        
+        estimate_support_dict={}
+        for alpha in alpha_list:
+            est_alpha={}
+            support_estimate=results[alpha]
+            est_alpha['support_estimate']=support_estimate
+            B_est= self.generate_estimate_from_support(X,Y,support=support_estimate)
+            est_alpha['signal_estimate']=B_est
+            estimate_support_dict[alpha]=est_alpha
+        return estimate_support_dict
+            
+            
+    def generate_residual_ratios(self,X,Y,algorithm):
+         
         if algorithm=='OMP':
             res_ratio,ordered_support_estimate_sequence=self.OMP_run()
         elif algorithm=='LASSO':
             res_ratio,ordered_support_estimate_sequence=self.LASSO_run()
-        else: 
+        else:
+            # if you want to add a new function other than OMP and LASSO add that function here
             print('invalid algorithm')
         return res_ratio,ordered_support_estimate_sequence
+    
     def generate_estimate_from_support(self,X,Y,support):
         Xt=X[:,support]
         Beta_est=np.zeros((self.nfeatures,1))
