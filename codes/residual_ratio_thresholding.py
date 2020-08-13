@@ -30,7 +30,7 @@ class residual_ratio_thresholding():
         self.scenario=scenario; 
         # scenario has to be one of {model_order_selection,compressed_sensing:SMV,compressed_sensing:MMV,
         # compressed_sensing:BSMV, compressed_sensing:BMMV, robust_regression}
-        # currently model order selection and robust regression has support single measurement vector case only. 
+        # currently model order selection and robust regression has support in single measurement vector case only.
         self.alpha_list=alpha_list # RRT involves a hyper parameter alpha. We typically set it as alpha=0.1. You can give multiple values as a list to check whether performance changes with alpha. 
         self.threshold_dict=None # place to keep various thresholds used in RRT
         
@@ -113,7 +113,8 @@ class residual_ratio_thresholding():
                     elif scenario.startswith('compressed_sensing'):
                         npossibilities=nfeatures_by_group_size-j+1
                     else:
-                        Exception('invalid scenario. scenario has to be in {model_order_selection,compressed_sensing,robust_regression}')
+                        Exception('invalid scenario. scenario has to be in {model_order_selection,compressed_sensing:SMV,compressed_sensing:MMV,'
+                                  'compressed_sensing:BSMV','compressed_sensing:BMMV','robust_regression}')
 
                     val=alpha_t/(npossibilities*kmax)
                     thres[k]=np.sqrt(special.betaincinv(a,b,val))
