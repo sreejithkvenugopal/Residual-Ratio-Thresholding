@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class residual_ratio_thresholding():
-    def __init__(self,nsamples,nfeatures,alpha_list=[0.1],nchannels=1, group_size=1,scenario='compressed_sensing:SMV'):
+    def __init__(self,nsamples,nfeatures,alpha_list=[0.1],nchannels=1,block_size=1,scenario='compressed_sensing:SMV'):
         # we consider a linear model Y=X*B+W+O. Y:observation. X: design matrix of size nsamples*nfeatures
         # inlier noise W: Gaussian  noise of size nsamples*L. 
         #outlier O: of size nsamples*nchannels
@@ -26,7 +26,7 @@ class residual_ratio_thresholding():
         self.nsamples=nsamples;    
         self.nfeatures=nfeatures;
         self.nchannels=nchannels;
-        self.group_size=group_size;
+        self.block_size=block_size;
         self.scenario=scenario; 
         # scenario has to be one of {model_order_selection,compressed_sensing:SMV,compressed_sensing:MMV,
         # compressed_sensing:BSMV, compressed_sensing:BMMV, robust_regression}
@@ -34,32 +34,22 @@ class residual_ratio_thresholding():
         self.alpha_list=alpha_list # RRT involves a hyper parameter alpha. We typically set it as alpha=0.1. You can give multiple values as a list to check whether performance changes with alpha. 
         self.threshold_dict=None # place to keep various thresholds used in RRT
         
-    def generate_thresholds_robust(self):
+    def generate_thresholds_robust_regression(self):
         # this function generate thresholds for robust regression
         nsamples=self.nsamples;
         nfeatures=self.nfeatures;
-        nchannels=self.nchannels;
-        group_size=self.group_size; kmax=self.kmax;
+        kmax=self.kmax;
         alpha_list=self.alpha_list;
-        
-        if group_size>1:
-            raise Exception('rrt currently does not support group sparse outliers. group_size has to be one')
         if nfeatures>nsamples:
             raise Exception('Must satisfy nfeatures<nsamples. This technique is for low dimensional dense regression with sparse outliers. High dimensional regression with sparse outliers can be posed as a compressive sensing problem')
+
         threshold_dict={}; # place to save the set of thresholds used for residual ratio thresholding
-        if np.remainder(nfeatures,group_size)>0.1:
-            raise Exception('nfeatures must not be a multiple of group size. Add zero columns in appropriate locations')
-        else:
-            nfeatures_by_group_size=np.int(nfeatures/group_size)
-        
-        
         for alpha in alpha_list:
-            
             # we compare the residual ratios with a sequence of threshold defined using the given value of alpha. 
             # however, if that thresholding scheme fails which happens only at low signal to noise ratio,
             # we gradually increase the value of alpha until we get a succesful thresholding. alphas_to_use is this set of thresholds
             # gradually increasing.
-            alphas_to_use=10**(np.linspace(np.log10(alpha),np.log10(nfeatures_by_group_size*kmax),100));
+            alphas_to_use=10**(np.linspace(np.log10(alpha),np.log10(nsamples*kmax),100));
             threshold_alpha={}; threshold_alpha['when_rrt_fails']=[]
             for alpha_t in alphas_to_use:
                 thres=np.zeros(kmax);
@@ -76,56 +66,178 @@ class residual_ratio_thresholding():
             threshold_alpha['alphas_to_use']=alphas_to_use
             threshold_dict[alpha]=threshold_alpha
         self.threshold_dict=threshold_dict
-        return None    
-         
-            
-        
-    def generate_thresholds_cs_mos(self):
-        # this function generate thresholds for robust regression
+        return None
+
+    def generate_thresholds_SMV(self):
+        # this function generate thresholds for SMV scenario
         nsamples=self.nsamples;
         nfeatures=self.nfeatures;
-        nchannels=self.nchannels;
-        group_size=self.group_size; kmax=self.kmax;
+        kmax=self.kmax;
         alpha_list=self.alpha_list;
-        scenario=self.scenario
         threshold_dict={}; # place to save the set of thresholds used for residual ratio thresholding
-        nfeatures_by_group_size=nfeatures 
-        if scenario=='compressed_sensing:BSMV' or scenario=='compressed_sensing:BMMV':
-            if np.remainder(nfeatures,group_size)>0.1:
-                raise Exception('nfeatures must not be a multiple of group size. Add zero columns in appropriate locations')
-            else:
-                nfeatures_by_group_size=np.int(nfeatures/group_size)
-        # choose 100 values of alpha
         for alpha in alpha_list:
-            # we compare the residual ratios with a sequence of threshold defined using the given value of alpha. 
+            # we compare the residual ratios with a sequence of threshold defined using the given value of alpha.
             # however, if that thresholding scheme fails which happens only at low signal to noise ratio,
             # we gradually increase the value of alpha until we get a succesful thresholding. alphas_to_use is this set of thresholds
             # gradually increasing.
-            
-            alphas_to_use=10**(np.linspace(np.log10(alpha),np.log10(nfeatures_by_group_size*kmax),100));
-            threshold_alpha={}; threshold_alpha['when_rrt_fails']=[]
-            for alpha_t in alphas_to_use:
-                thres=np.zeros(kmax);
-                for k in np.arange(kmax):
-                    j=k+1;a=(nsamples-j*group_size)*nchannels/2;b=nchannels*group_size/2;
-                    if scenario=='model_order_selection':
-                        npossibilities=1.0
-                    elif scenario.startswith('compressed_sensing'):
-                        npossibilities=nfeatures_by_group_size-j+1
-                    else:
-                        Exception('invalid scenario. scenario has to be in {model_order_selection,compressed_sensing:SMV,compressed_sensing:MMV,'
-                                  'compressed_sensing:BSMV','compressed_sensing:BMMV','robust_regression}')
 
-                    val=alpha_t/(npossibilities*kmax)
-                    thres[k]=np.sqrt(special.betaincinv(a,b,val))
-                if alpha_t==alpha:
-                    threshold_alpha['direct']=thres;
+            alphas_to_use = 10 ** (np.linspace(np.log10(alpha), np.log10(nfeatures* kmax), 100));
+            threshold_alpha = {};
+            threshold_alpha['when_rrt_fails'] = []
+            for alpha_t in alphas_to_use:
+                thres = np.zeros(kmax);
+                for k in np.arange(kmax):
+                    j = k + 1;
+                    a = (nsamples - j)/ 2;
+                    b = 1/ 2;
+                    npossibilities = nfeatures- j + 1
+                    val = alpha_t / (npossibilities * kmax)
+                    thres[k] = np.sqrt(special.betaincinv(a, b, val))
+                if alpha_t == alpha:
+                    threshold_alpha['direct'] = thres;
                 else:
                     threshold_alpha['when_rrt_fails'].append(thres)
-            threshold_alpha['alphas_to_use']=alphas_to_use
-            threshold_dict[alpha]=threshold_alpha
-        self.threshold_dict=threshold_dict
+            threshold_alpha['alphas_to_use'] = alphas_to_use
+            threshold_dict[alpha] = threshold_alpha
+        self.threshold_dict = threshold_dict
         return None
+
+    def generate_thresholds_MMV(self):
+        # this function generate thresholds for BMMV scenario
+        nsamples = self.nsamples;
+        nfeatures = self.nfeatures;nchannels=self.nchannels
+        kmax = self.kmax;
+        alpha_list = self.alpha_list;
+        threshold_dict = {};  # place to save the set of thresholds used for residual ratio thresholding
+        for alpha in alpha_list:
+            # we compare the residual ratios with a sequence of threshold defined using the given value of alpha.
+            # however, if that thresholding scheme fails which happens only at low signal to noise ratio,
+            # we gradually increase the value of alpha until we get a succesful thresholding. alphas_to_use is this set of thresholds
+            # gradually increasing.
+            alphas_to_use = 10 ** (np.linspace(np.log10(alpha), np.log10(nfeatures * kmax), 100));
+            threshold_alpha = {};
+            threshold_alpha['when_rrt_fails'] = []
+            for alpha_t in alphas_to_use:
+                thres = np.zeros(kmax);
+                for k in np.arange(kmax):
+                    j = k + 1;
+                    a = (nsamples - j)*nchannels/2;
+                    b = nchannels/2;
+                    npossibilities = nfeatures - j + 1
+                    val = alpha_t / (npossibilities * kmax)
+                    thres[k] = np.sqrt(special.betaincinv(a, b, val))
+                if alpha_t == alpha:
+                    threshold_alpha['direct'] = thres;
+                else:
+                    threshold_alpha['when_rrt_fails'].append(thres)
+            threshold_alpha['alphas_to_use'] = alphas_to_use
+            threshold_dict[alpha] = threshold_alpha
+        self.threshold_dict = threshold_dict
+        return None
+
+    def generate_thresholds_BSMV(self):
+        # this function generate thresholds for BSMV scenario
+        nsamples = self.nsamples;
+        nfeatures = self.nfeatures;block_size=self.block_size
+        nblocks=np.int(nfeatures/block_size)
+        kmax = self.kmax;
+        alpha_list = self.alpha_list;
+        threshold_dict = {};  # place to save the set of thresholds used for residual ratio thresholding
+        for alpha in alpha_list:
+            # we compare the residual ratios with a sequence of threshold defined using the given value of alpha.
+            # however, if that thresholding scheme fails which happens only at low signal to noise ratio,
+            # we gradually increase the value of alpha until we get a succesful thresholding. alphas_to_use is this set of thresholds
+            # gradually increasing.
+            alphas_to_use = 10 ** (np.linspace(np.log10(alpha), np.log10(nblocks*kmax), 100));
+            threshold_alpha = {};
+            threshold_alpha['when_rrt_fails'] = []
+            for alpha_t in alphas_to_use:
+                thres = np.zeros(kmax);
+                for k in np.arange(kmax):
+                    j = k + 1;
+                    a = (nsamples - j*block_size)/2;
+                    b = block_size/2;
+                    npossibilities = nblocks- j + 1
+                    val = alpha_t / (npossibilities * kmax)
+                    thres[k] = np.sqrt(special.betaincinv(a, b, val))
+                if alpha_t == alpha:
+                    threshold_alpha['direct'] = thres;
+                else:
+                    threshold_alpha['when_rrt_fails'].append(thres)
+            threshold_alpha['alphas_to_use'] = alphas_to_use
+            threshold_dict[alpha] = threshold_alpha
+        self.threshold_dict = threshold_dict
+        return None
+
+    def generate_thresholds_BMMV(self):
+        # this function generate thresholds for BSMV scenario
+        nsamples = self.nsamples;
+        nfeatures = self.nfeatures;
+        block_size = self.block_size; nchannels=self.nchannels
+        nblocks = np.int(nfeatures / block_size)
+        kmax = self.kmax;
+        alpha_list = self.alpha_list;
+        threshold_dict = {};  # place to save the set of thresholds used for residual ratio thresholding
+        for alpha in alpha_list:
+            # we compare the residual ratios with a sequence of threshold defined using the given value of alpha.
+            # however, if that thresholding scheme fails which happens only at low signal to noise ratio,
+            # we gradually increase the value of alpha until we get a succesful thresholding. alphas_to_use is this set of thresholds
+            # gradually increasing.
+            alphas_to_use = 10 ** (np.linspace(np.log10(alpha),np.log10(nblocks * kmax), 100));
+            threshold_alpha = {};
+            threshold_alpha['when_rrt_fails'] = []
+            for alpha_t in alphas_to_use:
+                thres = np.zeros(kmax);
+                for k in np.arange(kmax):
+                    j = k + 1;
+                    a = (nsamples - j * block_size)*nchannels/2;
+                    b = block_size*nchannels/2;
+                    npossibilities = nblocks - j + 1
+                    val = alpha_t / (npossibilities * kmax)
+                    thres[k] = np.sqrt(special.betaincinv(a, b, val))
+                if alpha_t == alpha:
+                    threshold_alpha['direct'] = thres;
+                else:
+                    threshold_alpha['when_rrt_fails'].append(thres)
+            threshold_alpha['alphas_to_use'] = alphas_to_use
+            threshold_dict[alpha] = threshold_alpha
+        self.threshold_dict = threshold_dict
+        return None
+
+    def generate_thresholds_MOS(self):
+        # this function generate thresholds for BSMV scenario
+        nsamples = self.nsamples;
+        nfeatures = self.nfeatures;
+        kmax = self.kmax;
+        alpha_list = self.alpha_list;
+        threshold_dict = {};  # place to save the set of thresholds used for residual ratio thresholding
+        for alpha in alpha_list:
+            # we compare the residual ratios with a sequence of threshold defined using the given value of alpha.
+            # however, if that thresholding scheme fails which happens only at low signal to noise ratio,
+            # we gradually increase the value of alpha until we get a succesful thresholding. alphas_to_use is this set of thresholds
+            # gradually increasing.
+            alphas_to_use = 10 ** (np.linspace(np.log10(alpha), np.log10(nfeatures * kmax), 100));
+            threshold_alpha = {};
+            threshold_alpha['when_rrt_fails'] = []
+            for alpha_t in alphas_to_use:
+                thres = np.zeros(kmax);
+                for k in np.arange(kmax):
+                    j = k + 1;
+                    a = (nsamples - j)/ 2;
+                    b = 1/ 2;
+                    npossibilities = 1
+                    val = alpha_t / (npossibilities * kmax)
+                    thres[k] = np.sqrt(special.betaincinv(a, b, val))
+                if alpha_t == alpha:
+                    threshold_alpha['direct'] = thres;
+                else:
+                    threshold_alpha['when_rrt_fails'].append(thres)
+            threshold_alpha['alphas_to_use'] = alphas_to_use
+            threshold_dict[alpha] = threshold_alpha
+        self.threshold_dict = threshold_dict
+        return None
+
+
     
     def compare_residual_ratios_with_threshold(self,res_ratio,thres):
         # this function compute the sparsity level from res_ratios given a RRT thres
@@ -144,13 +256,20 @@ class residual_ratio_thresholding():
         self.kmax=kmax; 
         if self.threshold_dict is None:
             # unless thresholds are computed a priori. compute the required thresholds. 
-            if self.scenario=='model_order_selection' or self.scenario.startswith('compressed_sensing'):
-                self.generate_thresholds_cs_mos()
+            if self.scenario=='model_order_selection':
+                self.generate_thresholds_MOS()
             elif self.scenario=='robust_regression':
-                self.generate_thresholds_robust()
+                self.generate_thresholds_robust_regression()
+            elif self.scenario=='SMV':
+                self.generate_thresholds_SMV()
+            elif self.scenario=='MMV':
+                self.generate_thresholds_MMV()
+            elif self.scenario=='BSMV':
+                self.generate_thresholds_BSMV()
+            elif self.scenario=='BMMV':
+                self.generate_thresholds_BMMV()
             else:
-                Exception('invalid scenario. scenario has to be in {model_order_selection,compressed_sensing,robust_regression}')      
-        
+                Exception('Invalid scenario')
         threshold_dict=self.threshold_dict
         alpha_list=self.alpha_list
         results={}
@@ -171,5 +290,4 @@ class residual_ratio_thresholding():
                         support_estimate=ordered_support_list[:sparsity_estimate]
                         break;
             results[alpha]=support_estimate # carries the support estimate for each value of alpha
-            
         return results     
