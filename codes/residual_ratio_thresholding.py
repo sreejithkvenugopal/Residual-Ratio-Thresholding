@@ -256,7 +256,7 @@ class residual_ratio_thresholding():
         self.kmax=kmax; 
         if self.threshold_dict is None:
             # unless thresholds are computed a priori. compute the required thresholds. 
-            if self.scenario=='model_order_selection':
+            if self.scenario=='MOS':
                 self.generate_thresholds_MOS()
             elif self.scenario=='robust_regression':
                 self.generate_thresholds_robust_regression()
@@ -269,7 +269,7 @@ class residual_ratio_thresholding():
             elif self.scenario=='BMMV':
                 self.generate_thresholds_BMMV()
             else:
-                Exception('Invalid scenario')
+                raise Exception('Invalid scenario')
         threshold_dict=self.threshold_dict
         alpha_list=self.alpha_list
         results={}
