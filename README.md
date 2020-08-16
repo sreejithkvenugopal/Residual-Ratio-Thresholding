@@ -1,21 +1,32 @@
 # Residual-Ratio-Thresholding
 
-Residual Ratio Thresholding  (RRT) is a technique to identify the the correct regression model from a sequence of  nested models.  
+Residual Ratio Thresholding  (RRT) is a technique to identify the the correct regression model from a sequence of candidate nested models. This can be utilized for the estimation of sparse entities. Its main features are,  
 
-1). RRT can operate algorithms like LASSO, OMP and their derivatives without knowing signal sparsity and noise variance. 
+1). RRT can operate algorithms like LASSO, OMP and their derivatives without knowing signal sparsity and noise variance. The requirement of a priori knowledge of hard to estimate quantities like signal sparsity, noise variance is a roadblock in using algorithms like OMP, LASSO especially for support recovery problems. 
 
-2). RRT  provides easy to interpret final sample support recovery guarantees. 
+2). RRT  provides easy to interpret finite sample and finite SNR  support recovery guarantees. 
 
-3). RRT is closely related to various information theoretic criteria. However, unlike many of popular information theoretic criteria, RRT is based on finite sample distributional results. 
+3). RRT is closely related to various information theoretic criteria like AIC, BIC etc. However, unlike many information theoretic criteria, RRT is based on finite sample distributional results. 
 
-4). RRT is applicable to many different scenarios like group sparsity, row sparsity, robust regression with sparse outliers, linear model order selection etc. 
+4). RRT is applicable to many different scenarios like unstructured sparse vector estimation, group sparse vector estimation, estimating row sparse matrix, robust regression with sparse outliers, linear model order selection etc. 
 
 These codes are a result of joint work with Dr.Sheetal Kalyani, Dept. Of Electrical Engineering. (http://www.ee.iitm.ac.in/user/skalyani/)
 
 # Usage 
-Please see the associated notebooks for a tutorial like description on using RRT. 
 
-1). RRT_single_measurment_vector.ipynb # for unstructured compressive sensing with single measurement vector
+The RRT based estimation functions for each scenario are available in seperate python files in codes/. Please see the associated notebooks for a tutorial like description on using RRT. 
+
+1). RRT_single_measurement_vector.ipynb # for unstructured compressive sensing with single measurement vector.
+
+2). RRT_multiple_measurement_vector.ipynb # for unstructured compressive sensing with multiple measurement vectors ,i.e., row sparse matrix estimation.
+
+3). RRT_block_single_measurement_vector.ipynb # for group/block sparse compressive sensing with single measurement vector.
+
+4). RRT_block_multiple_measurement_vector.ipynb # for compressive sensing with multiple measurement vector when non zero rows are cluttered together.
+
+5). RRT_model_order_selection.ipynb # for model order selection problems.
+
+6). RRT_robust_regression.ipynb # For estimation of dense vectors from regression models contaminated with sparse outliers. 
 
 # Publications
 
