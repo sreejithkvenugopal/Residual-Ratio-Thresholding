@@ -55,7 +55,7 @@ class residual_ratio_thresholding():
                 thres=np.zeros(kmax);
                 for k in np.arange(kmax):
                     # definition of RRT thresholds. 
-                    j=k+1+nfeatures;a=(nsamples-j)*nchannels/2;b=nchannels/2
+                    j=k+1+nfeatures;a=(nsamples-j)/2;b=1/2
                     npossibilities=(nsamples-j+1)
                     val=alpha_t/(npossibilities*kmax)
                     thres[k]=np.sqrt(special.betaincinv(a,b,val))
